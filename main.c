@@ -1,18 +1,17 @@
-#include "sh.h"
-#include <signal.h>
+//
+//  main.c
+//  CShell_CISC361_Project2
+//
+//  Created by MiguelZN on 10/4/19.
+//  Copyright © 2019 MiguelZN. All rights reserved.
+//
+
 #include <stdio.h>
+#include <unistd.h>
+#include "get_path.h"
 
-void sig_handler(int signal); 
+int main(int argc, char **argv, char **envp ){
+    sh(argc,argv,envp);
 
-int main( int argc, char **argv, char **envp )
-{
-  /* put signal set up stuff here */
-
-  return sh(argc, argv, envp);
+    return 0;
 }
-
-void sig_handler(int signal)
-{
-  /* define your signal handler */
-}
-

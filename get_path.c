@@ -7,7 +7,7 @@
 */
 #include "get_path.h"
 
-struct pathelement *get_path()
+struct pathelement* get_path()
 {
   /* path is a copy of the PATH and p is a temp pointer */
   char *path, *p;
@@ -42,3 +42,16 @@ struct pathelement *get_path()
 
   return pathlist;
 } /* end get_path() */
+
+void freePath(struct pathelement* path){
+    while(path){
+        struct pathelement* temp = path;
+        printf("Freeing:%s\n",temp->element);
+        path = path->next;
+        free(temp);
+    }
+    
+    if(path!=NULL){
+        printf("NOT EMPTY\n");
+    }
+}

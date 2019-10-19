@@ -10,11 +10,15 @@
 
 /* function prototype.  It returns a pointer to a linked list for the path
    elements. */
-struct pathelement *get_path();
 
+#ifndef GETPATH_H
+#define GETPATH_H
+struct pathelement *get_path();
+void freePath(struct pathelement* path);
 struct pathelement
 {
   char *element;			/* a dir in the path */
   struct pathelement *next;		/* pointer to next node */
 };
 
+#endif /*GETPATH_H*/
