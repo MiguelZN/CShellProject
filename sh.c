@@ -12,6 +12,7 @@
 #include <signal.h>
 #include "sh.h"
 #define COMMAND_LEN 50
+#define LONG_BUFFER 100
 
 int sh( int argc, char **argv, char **envp ){
     /* Put PATH into a linked list */
@@ -78,10 +79,56 @@ int sh( int argc, char **argv, char **envp ){
           free(allInstances);
       }
       else if(strcmp(command, "cd")==0){
+          char* flag1 = arguments[2]; //EX: cd .. thus arguments[2] == ".."
           
+          if(flag1==NULL){
+              chdir(getenv("HOME"));
+          }
+          else if(strcmp(flag1, "-")==0){
+              printf("ENTERED CD - \n");
+              char* current_dir = getcwd(NULL,LONG_BUFFER);
+              int index = getOccurrence(current_dir, '/', "last");
+              char* prev_dir = getSubstring(current_dir, 0, index-1);
+              printf("INDEXF:%d\n",index);
+              printf("ACTUAL:%c\n",current_dir[57]);
+              
+              printf("PREVDIR,%s\n",prev_dir);
+              int status = chdir(prev_dir);
+              printf("STATUS:%d\n",status);
+              free(prev_dir);
+              free(current_dir);
+              
+          }
+          else if(strcmp(flag1,"+")==0){
+              chdir("/Users");
+          }
+          else{
+              printf("ENTERING CHANGE DIR\n");
+              char* current_dir = pwd();
+              char* dirChangingTo = arguments[2];
+              
+              //Cd from current directory
+              char* new_dir = malloc(strlen(current_dir)+strlen(dirChangingTo)+1);
+              new_dir = concat(current_dir, "/");
+              new_dir = concat(new_dir,dirChangingTo);
+              printf("NEW DIR:%s\n",new_dir);
+              
+              //Cd to any directory
+              
+              
+              if(chdir(new_dir)==0){
+    
+              }
+              else{
+                  chdir(dirChangingTo);
+              }
+              free(new_dir);
+              free(current_dir);
+          }
       }
       else if(strcmp(command, "pwd")==0){
-          
+          char* current_dir = pwd();
+          free(current_dir);
       }
       else if(strcmp(command, "list")==0){
           
@@ -298,4 +345,51 @@ char* concat(const char *s1, const char *s2)
     strcpy(result, s1);
     strcat(result, s2);
     return result;
+}
+
+/*start:0th index
+ end: length
+ -it will copy a string from [start,end)
+ */
+char* getSubstring(char* str,int start,int end){
+    int size_substr = end-start+2;//+1 for '\0' character
+    char* new_str = malloc(size_substr);
+    
+    for(int i=start;i<=end+1;i++){
+        new_str[i] = str[i];
+    }
+    new_str[size_substr-1] = '\0';
+    
+    return new_str;
+}
+
+int getOccurrence(char* str, char c, char* firstorlast){
+    int index = -1;
+    
+    //Checks for last, first occurrence
+    if(strcmp(firstorlast, "last")){
+        for(int i=strlen(str)-1;i>=0;i--){
+            if(str[i]==c){
+                printf("CHAR:%c, INDEX:%d\n",str[i],i);
+                index = i;
+                break;
+            }
+        }
+    }
+    //Checks for first occurrence
+    else{
+        for(int i=0;i<strlen(str);i++){
+            if(str[i]==c){
+                index = i;
+            }
+        }
+    }
+    
+    return index;
+}
+
+char* pwd(){
+    char* current_dir = getcwd(NULL,LONG_BUFFER);
+    printf("%s\n",current_dir);
+    return current_dir;
 }
