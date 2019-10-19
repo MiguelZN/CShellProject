@@ -14,16 +14,22 @@
 #define COMMAND_LEN 50
 
 int sh( int argc, char **argv, char **envp ){
-    char cmd[COMMAND_LEN];
     /* Put PATH into a linked list */
     struct pathelement *pathlist = get_path();
     char* command_path;
-    char *arg[] = {NULL,"*.c",0};
     char **arguments;
     int go = 1;
     int i = 0;
     int status;
     int forkid;
+    
+//    printf("HELLO");
+//    char*arg[4];
+//    arg[0] ="/bin/ls";
+//    arg[1] ="-l";
+//    arg[2] =NULL;
+//    execve(arg[0], arg, envp);
+
 
   while (go){
       printf(">>");
@@ -33,54 +39,110 @@ int sh( int argc, char **argv, char **envp ){
       
       int num_args = (int)strtol(arguments[0], (char **)NULL, 10);//number of arguments
       char* command = arguments[1]; //the command to be executed EX: 'ls'
-      printf("SIZEOFARRAY:%d\n",num_args);
-      printf("INPUTTED COMMAND:%s\n",command);
+      //printf("SIZEOFARRAY:%d\n",num_args);
+      //printf("INPUTTED COMMAND:%s\n",command);
 
       
       
     /* check for each built in command and implement */
       command_path = which(command, pathlist);
-      printf("COMMANDPATH:%s\n",command_path);
-    
-     /*  else  program to exec */
-    
+      //printf("COMMANDPATH:%s\n",command_path);
       
+      /*Custom Commands*/
       //Exits the shell
       if(strcmp(command, "exit")==0){
           printf("Exiting..\n");
           freePath(pathlist);
           free(user_input);
-          
+          freeArguments(arguments);
+          free(command_path);
           go = 0;
       }
+      else if(strcmp(command, "which")==0){
+          //printf("ENTERED WHICH------------------\n");
+          if(which(command,pathlist)!=NULL){
+              char* checkCommand = arguments[2]; //Checks where the second argument is located
+              //EX: which pwd returns where pwd is located
+              char* found_path = which(checkCommand,pathlist);
+              
+              printf("PATH:=%s\n",found_path);
+              free(found_path);
+          }
+      }
+      else if(strcmp(command, "where")==0){
+          char* checkCommand = arguments[2]; //Checks where the second argument is located
+          //EX: which pwd returns where pwd is located
+          
+          char* allInstances = where(checkCommand, pathlist);
+          printf("PATHS:=%s\n",allInstances);
+          free(allInstances);
+      }
+      else if(strcmp(command, "cd")==0){
+          
+      }
+      else if(strcmp(command, "pwd")==0){
+          
+      }
+      else if(strcmp(command, "list")==0){
+          
+      }
+      else if(strcmp(command, "pid")==0){
+          
+      }
+      else if(strcmp(command, "kill")==0){
+          
+      }
+      else if(strcmp(command, "prompt")==0){
+          
+      }
+      else if(strcmp(command, "printenv")==0){
+          
+      }
+      else if(strcmp(command, "setenv")==0){
+          
+      }
+      else{
+          forkid = fork();
+      }
+      
+      
+      //Checks for built-in commands and executes them
+      
       if(forkid<0){
           ;
       }
-      //Checks for built-in commands and executes them
-      else if(access(command_path, F_OK) == 0){
-          printf("FOUND COMMAND\n");
-          int k=0;
-          while(arguments[k]!=NULL){
-              printf("FOUND:%s\n",arguments[k]);
-              k+=1;
-          }
-          
-          execve(arguments[1],&arguments[1],NULL);
-          //execve(arguments[1],NULL,NULL);
-
-          freeArguments(arguments);
-      }
       //Child
       else if(forkid==0){
-          /*Custom commands go in here*/
-          
+          if(access(command_path, F_OK) == 0){
+              //printf("FOUND COMMAND\n");
+              int k=0;
+              while(arguments[k]!=NULL){
+                  //printf("FOUND:%s\n",arguments[k]);
+                  k+=1;
+              }
+              
+              //NOTE: execve deallocates automatically child process memory
+              
+              
+              //execve(arguments[1],&arguments[1],NULL);
+              //execve(arguments[1],NULL,NULL);
+              //printf("BEFORE EXECUTING\n");
+              execve(command_path,&arguments[1],NULL);
+              //printf("AFTER EXECUTING\n");
+          }
       }
+//      else if(forkid==0){
+//          /*Custom commands go in here*/
+//
+//      }
       //Parent
       else{
-          forkid = fork();
-          int waitid = waitpid(forkid, &status,0);
+          waitpid(forkid, NULL,0);
           printf("PARENT:\n");
-          free(command_path);
+//          freePath(pathlist);
+//          free(user_input);
+//          freeArguments(arguments);
+//          free(command_path);
           
       }
        /* find it */
@@ -99,35 +161,43 @@ char *which(char *command, struct pathelement *pathlist )
     int found = 0;
     
     while (p) {         // WHERE
-        printf("PATHELEMENT:%s\n",p->element);
+        //printf("PATHELEMENT:%s\n",p->element);
         sprintf(located_path, "%s/%s", p->element,command);
         if (access(located_path, F_OK) == 0){
-            printf("FOUND");
-            printf("[%s]\n", located_path);
+            //printf("FOUND");
+            //printf("[%s]\n", located_path);
             found = 1;
             break;
         }
         p = p->next;
     }
     
-    if(found){
-        return located_path;
-    }
-    else{
-        return NULL;
-    }
-} /* which() */
+    return located_path;
+    
+//    if(found){
+//        return located_path;
+//    }
+//    else{
+//        located_path[0]
+//        return NULL;
+//    }
+}
 
 char* where(char *command, struct pathelement *pathlist){
     struct pathelement *p = pathlist;
     char *allInstances = malloc(sizeof(char)*COMMAND_LEN);
+    char *curr_str = malloc(sizeof(char)*COMMAND_LEN);
+    //char curr_str[50];
+    //printf("ENTERED WHERE\n");
+    allInstances = ""; //Initializes the string to empty string
     
-    while (p) {         // WHERE
-        printf("PATHELEMENT:%s\n",p->element);
-        sprintf(allInstances, "%s/%s", p->element,command);
-        if (access(allInstances, F_OK) == 0){
-            printf("FOUND");
-            printf("[%s]\n", allInstances);
+    while (p) {// WHERE
+        sprintf(curr_str, "%s/%s", p->element,command);
+        //printf("WHERE:%s\n",curr_str);
+        if (access(curr_str, F_OK) == 0){
+            //printf("CURRENT ALL INSTANCES:%s\n",allInstances);
+            allInstances = concat(allInstances, curr_str);
+            //printf("FOUND\n");
         }
         p = p->next;
     }
@@ -164,7 +234,7 @@ char** getArguments(char* str, char* specifer){
          token = strtok_r(NULL, specifer, &rest)) {
         num_whitespaces+=1;
     }
-    printf("FOUND %d WS\n",num_whitespaces);
+    //printf("FOUND %d WS\n",num_whitespaces);
     //EX: if found 2 whitespaces then EX command looks like: >>cd(ONEWS)ls(SECONDWS)main.c
     //String array should look like {SIZE,"cd","ls","main.c",NULL}
     //where SIZE is the size of the array
@@ -182,11 +252,9 @@ char** getArguments(char* str, char* specifer){
         stringarr[k] = malloc(sizeof(char)*(strlen(str)));
     }
     
-    //Sets last to NULL
-    stringarr[sizeofarray-1] = NULL;
     
     //Inserts the size of array into the 0th index
-    printf("%d",sizeofarray);
+    //printf("%d",sizeofarray);
     snprintf(stringarr[0],strlen(str),"%d",sizeofarray);
     
     
@@ -197,10 +265,13 @@ char** getArguments(char* str, char* specifer){
         token = strtok_r(NULL, specifer, &rest2)) {
         //printf("token:%s\n", token);
         stringarr[i] = strdup(token);
-        printf("INDEX%d\n",i);
+        //printf("INDEX%d\n",i);
         //printf("INDEX%d:%s\n",stringarr[i]);
         i+=1;
     }
+    
+    //Sets last to NULL
+    stringarr[sizeofarray-1] = NULL;
 
     free(str_copy);
     free(str_copy2);
@@ -210,9 +281,21 @@ char** getArguments(char* str, char* specifer){
 
 void freeArguments(char** arguments){
     int sizeofarr = (int)strtol(arguments[0], (char **)NULL, 10);
+    //printf("ENTERED FREE ARGUMENTS\n");
+    //printf("FA, SIZEOFARRAY:%d\n",sizeofarr);
     for(int i=sizeofarr-1;i>=0;i--){
-        printf("ARGUMENTS%s\n",arguments[i]);
-        printf("FREED ARG:%s\n", arguments[i]);
+        //printf("ARGUMENTS%s\n",arguments[i]);
+        //printf("FREED ARG:%s\n", arguments[i]);
         free(arguments[i]);
+        
     }
+}
+
+char* concat(const char *s1, const char *s2)
+{
+    char *result = malloc(strlen(s1) + strlen(s2) + 1); // +1 for the null-terminator
+    // in real code you would check for errors in malloc here
+    strcpy(result, s1);
+    strcat(result, s2);
+    return result;
 }

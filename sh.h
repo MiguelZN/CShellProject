@@ -15,6 +15,8 @@ void printenv(char **envp);
 char* getInput();
 char** getArguments(char* str, char* specifer);
 void freeArguments(char** arguments);
+char* concat(const char *s1, const char *s2);
+
 
 
 
