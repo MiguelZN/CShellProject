@@ -16,13 +16,6 @@
 
 int sh( int argc, char **argv, char **envp ){
     /* Put PATH into a linked list */
-    struct pathelement *pathlist = get_path();
-    char* command_path;
-    char **arguments;
-    int go = 1;
-    int i = 0;
-    int status;
-    int forkid;
     
 //    printf("HELLO");
 //    char*arg[4];
@@ -30,18 +23,27 @@ int sh( int argc, char **argv, char **envp ){
 //    arg[1] ="-l";
 //    arg[2] =NULL;
 //    execve(arg[0], arg, envp);
-
+    int go = 1;
 
   while (go){
+      struct pathelement *pathlist = get_path();
+      char* command_path;
+      char **arguments;
+//      int i = 0;
+//      int status;
+      int forkid;
+      
       printf(">>");
       char* user_input = getInput();
       arguments = getArguments(user_input, " ");
       
       
       int num_args = (int)strtol(arguments[0], (char **)NULL, 10);//number of arguments
+      //printf("NUM ARGS)
       char* command = arguments[1]; //the command to be executed EX: 'ls'
-      //printf("SIZEOFARRAY:%d\n",num_args);
-      //printf("INPUTTED COMMAND:%s\n",command);
+      printf("SIZEOFARRAY:%d\n",num_args);
+      printf("ARGS0:%s\n",arguments[0]);
+      //printf("INPUTTED COMMAND:%s\n",command);2
 
       
       
@@ -53,10 +55,10 @@ int sh( int argc, char **argv, char **envp ){
       //Exits the shell
       if(strcmp(command, "exit")==0){
           printf("Exiting..\n");
-          freePath(pathlist);
-          free(user_input);
-          freeArguments(arguments);
-          free(command_path);
+//          freePath(pathlist);
+//          free(user_input);
+//          freeArguments(arguments);
+//          free(command_path);
           go = 0;
       }
       else if(strcmp(command, "which")==0){
@@ -139,10 +141,30 @@ int sh( int argc, char **argv, char **envp ){
           free(current_dir);
       }
       else if(strcmp(command, "pid")==0){
-          
+          int pid = getpid();
+          printf("%d\n",pid);
       }
       else if(strcmp(command, "kill")==0){
+          //EX: kill pid, kill -9 pid
+          //Arguments EX: 4 kill pid# NULL  or Arguments: 5 kill signal# pid# NULL
+          int pid_num, signal_num;
+          char* pid_str = arguments[2];
+          char* signal_str = arguments[3];
+          //printf("ENTERED KILL, NUM ARGS:%d\n",num_args);
           
+          if(num_args>=5){ //atleast 5 arguments
+              //Converts pid_str to integer
+              pid_num = (int)strtol(pid_str, (char **)NULL, 10);
+              signal_num =(int)strtol(signal_str, (char **)NULL, 10);
+              //printf("5 ARGS, PID:%d, SIG:%d\n",pid_num,signal_num);
+              
+              kill(pid_num,signal_num);
+          }
+          else if(num_args>=4){//atleast 4 arguments
+              pid_num = (int)strtol(pid_str, (char **)NULL, 10);
+              //printf("4 ARGS:%d\n",pid_num);
+              kill(pid_num,SIGTERM);
+          }
       }
       else if(strcmp(command, "prompt")==0){
           
@@ -156,6 +178,11 @@ int sh( int argc, char **argv, char **envp ){
       else{
           forkid = fork();
       }
+      
+      freePath(pathlist);
+      free(user_input);
+      freeArguments(arguments);
+      free(command_path);
       
       
       //Checks for built-in commands and executes them
@@ -289,9 +316,12 @@ char** getArguments(char* str, char* specifer){
     
     
     //Inserts the size of array into the 0th index
-    //printf("%d",sizeofarray);
-    snprintf(stringarr[0],strlen(str),"%d",sizeofarray);
-    
+    printf("%d",sizeofarray);
+    char* num_malloc = malloc(sizeof(char)*sizeof(int));
+    sprintf(num_malloc, "%d",sizeofarray);
+    //snprintf(stringarr[0],strlen(str),"%d",sizeofarray);
+    stringarr[0] = num_malloc;
+    printf("SIZE ARGS0:%s\n",stringarr[0]);
     
     //Starts at 1st index and inserts the different spliced strings
     int i = 1;
@@ -319,8 +349,8 @@ void freeArguments(char** arguments){
     //printf("ENTERED FREE ARGUMENTS\n");
     //printf("FA, SIZEOFARRAY:%d\n",sizeofarr);
     for(int i=sizeofarr-1;i>=0;i--){
-        //printf("ARGUMENTS%s\n",arguments[i]);
-        //printf("FREED ARG:%s\n", arguments[i]);
+        printf("ARGUMENTS%s\n",arguments[i]);
+        printf("FREED ARG:%s\n", arguments[i]);
         free(arguments[i]);
         
     }
