@@ -114,8 +114,6 @@ int sh( int argc, char **argv, char **envp ){
               printf("NEW DIR:%s\n",new_dir);
               
               //Cd to any directory
-              
-              
               if(chdir(new_dir)==0){
     
               }
@@ -131,7 +129,14 @@ int sh( int argc, char **argv, char **envp ){
           free(current_dir);
       }
       else if(strcmp(command, "list")==0){
-          
+          char* current_dir = pwd();
+          if(arguments[2]!=NULL){
+              list(arguments[2]);
+          }
+          else{
+              list(current_dir);
+          }
+          free(current_dir);
       }
       else if(strcmp(command, "pid")==0){
           
@@ -201,8 +206,7 @@ int sh( int argc, char **argv, char **envp ){
   return 0;
 } /* sh() */
 
-char *which(char *command, struct pathelement *pathlist )
-{
+char *which(char *command, struct pathelement *pathlist ){
     struct pathelement *p = pathlist;
     char *located_path = malloc(sizeof(char)*COMMAND_LEN);
     int found = 0;
@@ -220,14 +224,6 @@ char *which(char *command, struct pathelement *pathlist )
     }
     
     return located_path;
-    
-//    if(found){
-//        return located_path;
-//    }
-//    else{
-//        located_path[0]
-//        return NULL;
-//    }
 }
 
 char* where(char *command, struct pathelement *pathlist){
@@ -251,14 +247,6 @@ char* where(char *command, struct pathelement *pathlist){
     
     return allInstances;
 }
-
-void list ( char *dir )
-{
-  /* see man page for opendir() and readdir() and print out filenames for
-  the directory passed */
-} /* list() */
-
-
 
 char* getInput(){
     int max_string_length = 30;
@@ -392,4 +380,22 @@ char* pwd(){
     char* current_dir = getcwd(NULL,LONG_BUFFER);
     printf("%s\n",current_dir);
     return current_dir;
+}
+
+void list(char* directory_path){
+    DIR *curr_dir;
+    struct dirent *curr_dirent;
+    
+    curr_dir = opendir(directory_path);
+    while((curr_dirent = readdir(curr_dir))!=NULL){
+        char* file_name= curr_dirent->d_name;
+        
+        if(!strcmp(file_name, ".") || !strcmp(file_name, "..")){ //removes "." and ".." files
+
+        }
+        else{
+            printf("%s\n",file_name); //only prints readable files
+        }
+    }
+    closedir(curr_dir);
 }
