@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include "sh.h"
+#define PREFIX_LEN 10
 #define COMMAND_LEN 50
 #define LONG_BUFFER 100
 
@@ -24,7 +25,8 @@ int sh( int argc, char **argv, char **envp ){
 //    arg[2] =NULL;
 //    execve(arg[0], arg, envp);
     int go = 1;
-
+    char* prefix = malloc(sizeof(char)*PREFIX_LEN); //What gets displayed before the prompt_text
+    
   while (go){
       struct pathelement *pathlist = get_path();
       char* command_path;
@@ -33,7 +35,9 @@ int sh( int argc, char **argv, char **envp ){
 //      int status;
       int forkid;
       
-      printf(">>");
+      char* prompt_text = pwd();
+      printf("%s [%s]>>",prefix,prompt_text);
+      
       char* user_input = getInput();
       arguments = getArguments(user_input, " ");
       
@@ -54,11 +58,8 @@ int sh( int argc, char **argv, char **envp ){
       /*Custom Commands*/
       //Exits the shell
       if(strcmp(command, "exit")==0){
+          free(prefix);
           printf("Exiting..\n");
-//          freePath(pathlist);
-//          free(user_input);
-//          freeArguments(arguments);
-//          free(command_path);
           go = 0;
       }
       else if(strcmp(command, "which")==0){
@@ -89,7 +90,7 @@ int sh( int argc, char **argv, char **envp ){
           else if(strcmp(flag1, "-")==0){
               printf("ENTERED CD - \n");
               char* current_dir = getcwd(NULL,LONG_BUFFER);
-              int index = getOccurrence(current_dir, '/', "last");
+              int index = getOccurrence(current_dir, '/', "first");
               char* prev_dir = getSubstring(current_dir, 0, index-1);
               printf("INDEXF:%d\n",index);
               printf("ACTUAL:%c\n",current_dir[57]);
@@ -167,7 +168,13 @@ int sh( int argc, char **argv, char **envp ){
           }
       }
       else if(strcmp(command, "prompt")==0){
-          
+          char* new_prefix = arguments[2];
+          printf("NEW PREFIX:%s\n",new_prefix);
+          printf("CURRENT PREFIX:%s\n",prefix);
+          free(prefix);
+          prefix = malloc(sizeof(char)*PREFIX_LEN);
+          prefix = "";
+          prefix = concat(prefix, new_prefix);
       }
       else if(strcmp(command, "printenv")==0){
           
@@ -175,10 +182,11 @@ int sh( int argc, char **argv, char **envp ){
       else if(strcmp(command, "setenv")==0){
           
       }
-      else{
+      else if(access(command_path, F_OK) == 0){
           forkid = fork();
       }
       
+      //Freeing memory
       freePath(pathlist);
       free(user_input);
       freeArguments(arguments);
@@ -186,13 +194,11 @@ int sh( int argc, char **argv, char **envp ){
       
       
       //Checks for built-in commands and executes them
-      
       if(forkid<0){
           ;
       }
       //Child
       else if(forkid==0){
-          if(access(command_path, F_OK) == 0){
               //printf("FOUND COMMAND\n");
               int k=0;
               while(arguments[k]!=NULL){
@@ -201,34 +207,15 @@ int sh( int argc, char **argv, char **envp ){
               }
               
               //NOTE: execve deallocates automatically child process memory
-              
-              
-              //execve(arguments[1],&arguments[1],NULL);
-              //execve(arguments[1],NULL,NULL);
-              //printf("BEFORE EXECUTING\n");
               execve(command_path,&arguments[1],NULL);
               //printf("AFTER EXECUTING\n");
-          }
       }
-//      else if(forkid==0){
-//          /*Custom commands go in here*/
-//
-//      }
       //Parent
       else{
           waitpid(forkid, NULL,0);
           printf("PARENT:\n");
-//          freePath(pathlist);
-//          free(user_input);
-//          freeArguments(arguments);
-//          free(command_path);
           
       }
-       /* find it */
-       /* do fork(), execve() and waitpid() */
-
-      /* else */
-        /* fprintf(stderr, "%s: Command not found.\n", args[0]); */
   }
   return 0;
 } /* sh() */
@@ -356,8 +343,7 @@ void freeArguments(char** arguments){
     }
 }
 
-char* concat(const char *s1, const char *s2)
-{
+char* concat(const char *s1, const char *s2){
     char *result = malloc(strlen(s1) + strlen(s2) + 1); // +1 for the null-terminator
     // in real code you would check for errors in malloc here
     strcpy(result, s1);
@@ -429,3 +415,14 @@ void list(char* directory_path){
     }
     closedir(curr_dir);
 }
+
+//void prompt(char* current_prompt, char* prefix){
+//    //char* new_prefix = arguments[2];
+//    //printf("NEW PREFIX:%s\n",new_prefix);
+//    //printf("CURRENT PREFIX:%s\n",prefix);
+//    char *new_prefix = prefix;
+//    free(prefix);
+//    prefix = malloc(sizeof(char)*PREFIX_LEN);
+//    prefix = "";
+//    prefix = concat(prefix, new_prefix);
+//}

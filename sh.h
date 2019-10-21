@@ -10,6 +10,7 @@ char *where(char *command, struct pathelement *pathlist);
 char* pwd();
 void list(char* directory_path);
 void printenv(char **envp);
+//void prompt(char* current_prompt, char* prefix);
 
 
 /*Helper Functions*/
