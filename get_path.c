@@ -38,7 +38,7 @@ struct pathelement* get_path()
     }
     tmp->element = p;	
     tmp->next = NULL;
-  } while ( p = strtok(NULL, ":") );
+  } while ((p = strtok(NULL, ":")));
 
   return pathlist;
 } /* end get_path() */
@@ -46,7 +46,7 @@ struct pathelement* get_path()
 void freePath(struct pathelement* path){
     while(path){
         struct pathelement* temp = path;
-        printf("Freeing:%s\n",temp->element);
+        //printf("Freeing:%s\n",temp->element);
         path = path->next;
         free(temp);
     }

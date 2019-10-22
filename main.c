@@ -12,6 +12,12 @@
 
 int main(int argc, char **argv, char **envp ){
     sh(argc,argv,envp);
+    
+//    printf("ENTER INPUT\n");
+//    char* user_input = getInput();
+//    char **arguments = getArguments2(user_input, " ");
+//
+//    freeArguments(arguments);
 
     return 0;
 }

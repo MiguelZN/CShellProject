@@ -16,6 +16,7 @@
 #define LONG_BUFFER 100
 
 int sh( int argc, char **argv, char **envp ){
+    
     /* Put PATH into a linked list */
     
 //    printf("HELLO");
@@ -28,41 +29,48 @@ int sh( int argc, char **argv, char **envp ){
     char* prefix = malloc(sizeof(char)*PREFIX_LEN); //What gets displayed before the prompt_text
     
   while (go){
+      printf("-----------------------------\n");
       struct pathelement *pathlist = get_path();
-      char* command_path;
-      char **arguments;
 //      int i = 0;
 //      int status;
-      int forkid;
+      int forkid = 1;
       
       char* prompt_text = pwd();
       printf("%s [%s]>>",prefix,prompt_text);
       
       char* user_input = getInput();
-      arguments = getArguments(user_input, " ");
+      char **arguments = getArguments2(user_input, " ");
       
+      free(prefix);
+      free(prompt_text);
+      free(arguments);
       
-      int num_args = (int)strtol(arguments[0], (char **)NULL, 10);//number of arguments
+      break;
+      
+      int num_args = strToint(arguments[0]);//number of arguments
       //printf("NUM ARGS)
       char* command = arguments[1]; //the command to be executed EX: 'ls'
-      printf("SIZEOFARRAY:%d\n",num_args);
-      printf("ARGS0:%s\n",arguments[0]);
+      //printf("SIZEOFARRAY:%d\n",num_args);
+      //printf("ARGS0:%s\n",arguments[0]);
       //printf("INPUTTED COMMAND:%s\n",command);2
+      char* command_path = which(command, pathlist);
 
       
       
     /* check for each built in command and implement */
-      command_path = which(command, pathlist);
       //printf("COMMANDPATH:%s\n",command_path);
       
       /*Custom Commands*/
       //Exits the shell
       if(strcmp(command, "exit")==0){
+          printBlock("Executing exit");
+          
           free(prefix);
           printf("Exiting..\n");
           go = 0;
       }
       else if(strcmp(command, "which")==0){
+          printBlock("Executing which");
           //printf("ENTERED WHICH------------------\n");
           if(which(command,pathlist)!=NULL){
               char* checkCommand = arguments[2]; //Checks where the second argument is located
@@ -74,6 +82,7 @@ int sh( int argc, char **argv, char **envp ){
           }
       }
       else if(strcmp(command, "where")==0){
+          printBlock("Executing where");
           char* checkCommand = arguments[2]; //Checks where the second argument is located
           //EX: which pwd returns where pwd is located
           
@@ -82,56 +91,18 @@ int sh( int argc, char **argv, char **envp ){
           free(allInstances);
       }
       else if(strcmp(command, "cd")==0){
-          char* flag1 = arguments[2]; //EX: cd .. thus arguments[2] == ".."
-          
-          if(flag1==NULL){
-              chdir(getenv("HOME"));
-          }
-          else if(strcmp(flag1, "-")==0){
-              printf("ENTERED CD - \n");
-              char* current_dir = getcwd(NULL,LONG_BUFFER);
-              int index = getOccurrence(current_dir, '/', "first");
-              char* prev_dir = getSubstring(current_dir, 0, index-1);
-              printf("INDEXF:%d\n",index);
-              printf("ACTUAL:%c\n",current_dir[57]);
-              
-              printf("PREVDIR,%s\n",prev_dir);
-              int status = chdir(prev_dir);
-              printf("STATUS:%d\n",status);
-              free(prev_dir);
-              free(current_dir);
-              
-          }
-          else if(strcmp(flag1,"+")==0){
-              chdir("/Users");
-          }
-          else{
-              printf("ENTERING CHANGE DIR\n");
-              char* current_dir = pwd();
-              char* dirChangingTo = arguments[2];
-              
-              //Cd from current directory
-              char* new_dir = malloc(strlen(current_dir)+strlen(dirChangingTo)+1);
-              new_dir = concat(current_dir, "/");
-              new_dir = concat(new_dir,dirChangingTo);
-              printf("NEW DIR:%s\n",new_dir);
-              
-              //Cd to any directory
-              if(chdir(new_dir)==0){
-    
-              }
-              else{
-                  chdir(dirChangingTo);
-              }
-              free(new_dir);
-              free(current_dir);
-          }
+          printBlock("Executing cd");
+          char* desired_directory = arguments[2]; //EX: cd .. thus arguments[2] == ".."
+          cd(desired_directory);
       }
       else if(strcmp(command, "pwd")==0){
+          printBlock("Executing pwd");
           char* current_dir = pwd();
+          printf("%s\n",current_dir);
           free(current_dir);
       }
       else if(strcmp(command, "list")==0){
+          printBlock("Executing list");
           char* current_dir = pwd();
           if(arguments[2]!=NULL){
               list(arguments[2]);
@@ -142,10 +113,12 @@ int sh( int argc, char **argv, char **envp ){
           free(current_dir);
       }
       else if(strcmp(command, "pid")==0){
+          printBlock("Executing pid");
           int pid = getpid();
           printf("%d\n",pid);
       }
       else if(strcmp(command, "kill")==0){
+          printBlock("Executing kill");
           //EX: kill pid, kill -9 pid
           //Arguments EX: 4 kill pid# NULL  or Arguments: 5 kill signal# pid# NULL
           int pid_num, signal_num;
@@ -155,42 +128,89 @@ int sh( int argc, char **argv, char **envp ){
           
           if(num_args>=5){ //atleast 5 arguments
               //Converts pid_str to integer
-              pid_num = (int)strtol(pid_str, (char **)NULL, 10);
-              signal_num =(int)strtol(signal_str, (char **)NULL, 10);
+              pid_num = strToint(pid_str);
+              signal_num =strToint(signal_str);
               //printf("5 ARGS, PID:%d, SIG:%d\n",pid_num,signal_num);
               
               kill(pid_num,signal_num);
           }
           else if(num_args>=4){//atleast 4 arguments
-              pid_num = (int)strtol(pid_str, (char **)NULL, 10);
+              pid_num = strToint(pid_str);
               //printf("4 ARGS:%d\n",pid_num);
               kill(pid_num,SIGTERM);
           }
       }
       else if(strcmp(command, "prompt")==0){
+          printBlock("Executing prompt");
           char* new_prefix = arguments[2];
-          printf("NEW PREFIX:%s\n",new_prefix);
-          printf("CURRENT PREFIX:%s\n",prefix);
+          //printf("NEW PREFIX:%s\n",new_prefix);
+          //printf("CURRENT PREFIX:%s\n",prefix);
           free(prefix);
           prefix = malloc(sizeof(char)*PREFIX_LEN);
           prefix = "";
           prefix = concat(prefix, new_prefix);
       }
       else if(strcmp(command, "printenv")==0){
-          
+          printBlock("Executing printenv");
+          int num_args =strToint(arguments[0]);
+          if(num_args>=4){ //EX: arguments: 4 printenv HOME NULL
+              char* arg = arguments[2];
+              printenv(arg);
+          }
+          else{
+              printenv(NULL);
+          }
       }
       else if(strcmp(command, "setenv")==0){
+          printBlock("Executing setenv");
+          int num_args = strToint(arguments[0]);
+          char* name;
+          char* value;
           
+          
+          
+          if(num_args==5){//EX: arguments: 5 setenv NAME VALUE NULL
+              name = arguments[2];
+              value = arguments[3];
+              
+              if(strcmp(name, "PATH")==0){
+                  setenv(name, value,1);
+                  //Should update linked list for path directories (free old one)
+                  free(pathlist);
+                  pathlist = get_path();
+              }
+              else if(strcmp(name, "HOME")==0){
+                  DIR *directory = opendir(value);
+                  if(directory){
+                      setenv(name, value, 1);
+                      printf("Succesful!\n");
+                      closedir(directory);
+                  }
+                  else{
+                      printf("Directory does not exist!\n");
+                  }
+              }
+              else{
+                  setenv(name, value, 1);
+              }
+          }
+          else if(num_args==4){ //EX: arguments: 4 setenv NAME NULL
+              name = arguments[2];
+              //printf("NAME:%s\n",name);
+              setenv(name, "", 1);
+          }
+          else if(num_args==3){//EX: arguments: 3 setenv NULL
+              //printf("ENTERED PRINTENV\n");
+              printenv(NULL);
+          }
       }
-      else if(access(command_path, F_OK) == 0){
+      else if(access(command_path, F_OK) == 0 ||arguments[1][0]=='.' ||arguments[1][0]=='/'){
+          //printf("ENTERED FORK\n");
           forkid = fork();
       }
       
-      //Freeing memory
-      freePath(pathlist);
-      free(user_input);
-      freeArguments(arguments);
-      free(command_path);
+
+      //printf("FREED MEMORY\n");
       
       
       //Checks for built-in commands and executes them
@@ -199,23 +219,63 @@ int sh( int argc, char **argv, char **envp ){
       }
       //Child
       else if(forkid==0){
-              //printf("FOUND COMMAND\n");
-              int k=0;
-              while(arguments[k]!=NULL){
-                  //printf("FOUND:%s\n",arguments[k]);
-                  k+=1;
-              }
+          //printf("FOUND COMMAND\n");
+          int k=0;
+          while(arguments[k]!=NULL){
+              printf("FOUND:%s\n",arguments[k]);
+              k+=1;
+          }
+          
+          printf("COMMAND:%s\n",arguments[1]);
+          //    ../  Go up to parent directory and run
+          if(arguments[1][0]=='.' && arguments[1][1]=='.' && arguments[1][2]=='/'){
+              printf("ENTERED ../\n");
+              char* curr_directory = pwd();
+              int index = getOccurrence(curr_directory, '/', "last");
+              char* parent_directory = getSubstring(curr_directory, 0, index);
               
-              //NOTE: execve deallocates automatically child process memory
+              //Gets file name
+              printf("SUBSTRING:%s\n", &arguments[1][3]);
+
+              parent_directory = concat(parent_directory, &arguments[1][3]);
+              printf("Parent Directory:%s\n",parent_directory);
+              if(execvp(parent_directory,&arguments[1])==-1){
+                  kill(getpid(),SIGTERM);
+                  printf("Not a valid exec\n");
+              }
+              else{
+                  execvp(parent_directory,&arguments[1]);
+                  printf("Successful exec\n");
+              }
+          }
+          //   ./  run within current directory
+          else if(arguments[1][0]=='.' && arguments[1][1]=='/' ){
+              
+          }else{
+            //NOTE: execve deallocates automatically child process memory
+              char* new_str = concat("Executing Built-in", arguments[1]);
+              printf("NEW STRING:%s\n",new_str);
+              printBlock(new_str);
               execve(command_path,&arguments[1],NULL);
+          }
+
               //printf("AFTER EXECUTING\n");
       }
       //Parent
-      else{
+      else if(forkid>0){
           waitpid(forkid, NULL,0);
-          printf("PARENT:\n");
+          //printf("PARENT:\n");
           
       }
+      
+      //Freeing memory
+      freePath(pathlist);
+      free(user_input);
+      freeArguments(arguments);
+      free(command_path);
+      
+      //printf("REACHED END OF WHILE LOOP\n");
+      //printf("-----------------------------\n\n");
   }
   return 0;
 } /* sh() */
@@ -303,12 +363,12 @@ char** getArguments(char* str, char* specifer){
     
     
     //Inserts the size of array into the 0th index
-    printf("%d",sizeofarray);
+    //printf("%d",sizeofarray);
     char* num_malloc = malloc(sizeof(char)*sizeof(int));
     sprintf(num_malloc, "%d",sizeofarray);
     //snprintf(stringarr[0],strlen(str),"%d",sizeofarray);
     stringarr[0] = num_malloc;
-    printf("SIZE ARGS0:%s\n",stringarr[0]);
+    //printf("SIZE ARGS0:%s\n",stringarr[0]);
     
     //Starts at 1st index and inserts the different spliced strings
     int i = 1;
@@ -331,13 +391,76 @@ char** getArguments(char* str, char* specifer){
 
 }
 
+char **getArguments2(char*str, char* specifier){
+//Creates two copies of str (since strok_r modifies them)
+char str_copy[strlen(str)];
+strcpy(str_copy, str);
+
+char str_copy2[strlen(str)];
+strcpy(str_copy2, str);
+
+char *rest = NULL;
+char *token;
+
+//Checks for how many whitespaces there are
+int num_whitespaces =0;
+for (token = strtok_r(str_copy, specifier, &rest);token != NULL;
+     token = strtok_r(NULL, specifier, &rest)) {
+    num_whitespaces+=1;
+}
+num_whitespaces-=1;
+//printf("FOUND %d WS\n",num_whitespaces);
+//EX: if found 2 whitespaces then EX command looks like: >>cd(ONEWS)ls(SECONDWS)main.c
+//String array should look like {SIZE,"cd","ls","main.c",NULL}
+//where SIZE is the size of the array
+//and the last element is NULL for arguments to be executed
+
+//Allocates array where:
+/*0th index: size of array
+ 1th index: command
+ 2th index: file EX: main.c
+ 3th+ index: flags
+ */
+int sizeofarray = num_whitespaces+3; //1 extra for first element, 2 for SIZE and NULL
+char** stringarr = malloc(sizeof(char)*sizeofarray);
+for(int k=0;k<sizeofarray;k++){
+    stringarr[k] = malloc(sizeof(char)*(strlen(str)));
+    stringarr[k] = "";
+}
+
+
+//Inserts the size of array into the 0th index
+//printf("%d",sizeofarray);
+char* num_malloc = malloc(sizeof(char)*sizeof(int));
+sprintf(num_malloc, "%d",sizeofarray);
+stringarr[0] = num_malloc;
+//printf("SIZE ARGS0:%s\n",stringarr[0]);
+
+//Starts at 1st index and inserts the different spliced strings
+int i = 1;
+char *rest2 = NULL;
+for (token = strtok_r(str_copy2, specifier, &rest2);token != NULL;
+     token = strtok_r(NULL, specifier, &rest2)) {
+    //printf("token:%s\n", token);
+    stringarr[i] = strdup(token);
+    //printf("INDEX%d\n",i);
+    //printf("INDEX%d:%s\n",stringarr[i]);
+    i+=1;
+}
+
+//Sets last to NULL
+stringarr[sizeofarray-1] = NULL;
+return stringarr;
+
+}
+
 void freeArguments(char** arguments){
-    int sizeofarr = (int)strtol(arguments[0], (char **)NULL, 10);
+    int sizeofarr = strToint(arguments[0]);
     //printf("ENTERED FREE ARGUMENTS\n");
     //printf("FA, SIZEOFARRAY:%d\n",sizeofarr);
     for(int i=sizeofarr-1;i>=0;i--){
-        printf("ARGUMENTS%s\n",arguments[i]);
-        printf("FREED ARG:%s\n", arguments[i]);
+        //printf("ARGUMENTS%s\n",arguments[i]);
+        //printf("FREED ARG:%s\n", arguments[i]);
         free(arguments[i]);
         
     }
@@ -345,7 +468,6 @@ void freeArguments(char** arguments){
 
 char* concat(const char *s1, const char *s2){
     char *result = malloc(strlen(s1) + strlen(s2) + 1); // +1 for the null-terminator
-    // in real code you would check for errors in malloc here
     strcpy(result, s1);
     strcat(result, s2);
     return result;
@@ -374,7 +496,7 @@ int getOccurrence(char* str, char c, char* firstorlast){
     if(strcmp(firstorlast, "last")){
         for(int i=strlen(str)-1;i>=0;i--){
             if(str[i]==c){
-                printf("CHAR:%c, INDEX:%d\n",str[i],i);
+                //printf("CHAR:%c, INDEX:%d\n",str[i],i);
                 index = i;
                 break;
             }
@@ -394,7 +516,6 @@ int getOccurrence(char* str, char c, char* firstorlast){
 
 char* pwd(){
     char* current_dir = getcwd(NULL,LONG_BUFFER);
-    printf("%s\n",current_dir);
     return current_dir;
 }
 
@@ -426,3 +547,76 @@ void list(char* directory_path){
 //    prefix = "";
 //    prefix = concat(prefix, new_prefix);
 //}
+
+void printenv(char *name){
+    extern char **environ;
+    
+    if(name==NULL){
+        int i=0;
+        while(environ[i]){
+            printf("ENVIRONMENT:%s\n",environ[i++]);
+        }
+    }
+    else{
+        printf("ENVIRONMENT:%s",getenv(name));
+    }
+}
+
+//void setenv(char *name, char *value){
+//    if(strcmp(value, "")==0){
+//        setenv(name,"");
+//    }
+//    else{
+//        setenv(name, value);
+//    }
+//}
+
+int strToint(char* int_str){
+    int num = (int)strtol(int_str, (char **)NULL, 10);
+    return num;
+}
+
+void cd(char* directory){
+    if(directory==NULL){
+        chdir(getenv("HOME"));
+    }
+    else if(strcmp(directory, "-")==0){
+        //printf("ENTERED CD - \n");
+        char* current_dir = getcwd(NULL,LONG_BUFFER);
+        int index = getOccurrence(current_dir, '/', "first");
+        char* prev_dir = getSubstring(current_dir, 0, index-1);
+        //printf("INDEXF:%d\n",index);
+        //printf("ACTUAL:%c\n",current_dir[57]);
+        
+        //printf("PREVDIR,%s\n",prev_dir);
+        int status = chdir(prev_dir);
+        //printf("STATUS:%d\n",status);
+        free(prev_dir);
+        free(current_dir);
+        
+    }
+    else{
+        //printf("ENTERING CHANGE DIR\n");
+        char* current_dir = pwd();
+        
+        //Cd from current directory
+        char* new_dir = malloc(strlen(current_dir)+strlen(directory)+1);
+        new_dir = concat(current_dir, "/");
+        new_dir = concat(new_dir,directory);
+        //printf("NEW DIR:%s\n",new_dir);
+        
+        //Cd to any directory
+        if(chdir(new_dir)==0){
+            
+        }
+        else{
+            chdir(directory);
+        }
+        free(new_dir);
+        free(current_dir);
+    }
+}
+
+void printBlock(char* str){
+    printf("%s:\n",str);
+}
