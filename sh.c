@@ -98,13 +98,7 @@ int sh( int argc, char **argv, char **envp ){
       //printf("COMMANDPATH:%s\n",command_path);
       
       /*Custom Commands*/
-      //Exits the shell
-      if(strcmp(command, "exit")==0){
-          printBlock("Executing exit");
-          printf("Exiting..\n");
-          go = 0;
-      }
-      else if(strcmp(command, "which")==0){
+      if(strcmp(command, "which")==0){
           printBlock("Executing which");
           //printf("ENTERED WHICH------------------\n");
           if(which(command,pathlist)!=NULL){
@@ -310,11 +304,25 @@ int sh( int argc, char **argv, char **envp ){
           
       }
       
-      //Freeing memory paths
-      freePath(pathlist);
-      free(command_path);
-      free(user_input);
-      free(prompt_text);
+      //Exits the shell
+      if(strcmp(command, "exit")==0){
+          printBlock("Executing exit");
+          printf("Exiting..\n");
+          //Freeing memory paths
+          freePath(pathlist);
+          free(command_path);
+          free(user_input);
+          free(prompt_text);
+          go = 0;
+      }
+      else{
+          //Freeing memory paths
+          freePath(pathlist);
+          free(command_path);
+          free(user_input);
+          free(prompt_text);
+      }
+      
       
       printf("REACHED END OF WHILE LOOP\n");
       //printf("-----------------------------\n\n");
