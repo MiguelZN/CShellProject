@@ -49,7 +49,6 @@ int sh( int argc, char **argv, char **envp ){
       char cpy2_userinput[len_userinput];
       strcpy(cpy_userinput, user_input);
       strcpy(cpy2_userinput,user_input);
-      free(user_input);
 
       //Arguments:
       //Gets the number of arguments
@@ -115,6 +114,12 @@ int sh( int argc, char **argv, char **envp ){
       if(strcmp(command, "exit")==0){
           printBlock("Executing exit");
           printf("Exiting..\n");
+          
+          //Freeing memory paths
+          freePath(pathlist);
+          free(command_path);
+          free(user_input);
+          free(prompt_text);
           go = 0;
       }
       else if(strcmp(command, "which")==0){
@@ -224,7 +229,7 @@ int sh( int argc, char **argv, char **envp ){
               if(strcmp(name, "PATH")==0){
                   setenv(name, value,1);
                   //Should update linked list for path directories (free old one)
-                  free(pathlist);
+                  freePath(pathlist);
                   pathlist = get_path();
               }
               else if(strcmp(name, "HOME")==0){
@@ -291,6 +296,8 @@ int sh( int argc, char **argv, char **envp ){
                   execvp(parent_directory,&command);
                   printf("Successful exec\n");
               }
+              
+              free(curr_directory);
           }
           //   ./  run within current directory
           else if(command[0]=='.' && command[1]=='/' ){
@@ -315,6 +322,8 @@ int sh( int argc, char **argv, char **envp ){
       //Freeing memory paths
       freePath(pathlist);
       free(command_path);
+      free(user_input);
+      free(prompt_text);
       
       printf("REACHED END OF WHILE LOOP\n");
       //printf("-----------------------------\n\n");
