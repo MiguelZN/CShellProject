@@ -16,20 +16,8 @@
 #define LONG_BUFFER 100
 
 int sh( int argc, char **argv, char **envp ){
-    
-    /* Put PATH into a linked list */
-    
-//    printf("HELLO");
-//    char*arg[4];
-//    arg[0] ="/bin/ls";
-//    arg[1] ="-l";
-//    arg[2] =NULL;
-//    execve(arg[0], arg, envp);
-
-    
     int go = 1;
 
-    //char* prefix = malloc(sizeof(char)*PREFIX_LEN); //What gets displayed before the prompt_text
     char prefix[COMMAND_LEN];
     strcpy(prefix,"");
     
@@ -71,7 +59,7 @@ int sh( int argc, char **argv, char **envp ){
       token = strtok(cpy2_userinput, " ");
       while(token!=NULL){
           printf("Inputting args:%s\n",token);
-          arguments[index] = "L";
+          arguments[index] = "";
           arguments[index] = token;
           //strcpy(arguments[index],token);
           token = strtok(NULL, " ");
@@ -89,10 +77,10 @@ int sh( int argc, char **argv, char **envp ){
       
       //printf("NUM ARGS)
       char* command = arguments[0]; //the command to be executed EX: 'ls'
-      char* second_arg = "";
-      char* third_arg = "";
+      char* second_arg = NULL;
+      char* third_arg = NULL;
       
-      if(num_args>=3){
+      if(num_args==3){
           second_arg = arguments[1];
       }
       else if(num_args>=4){
@@ -114,12 +102,6 @@ int sh( int argc, char **argv, char **envp ){
       if(strcmp(command, "exit")==0){
           printBlock("Executing exit");
           printf("Exiting..\n");
-          
-          //Freeing memory paths
-          freePath(pathlist);
-          free(command_path);
-          free(user_input);
-          free(prompt_text);
           go = 0;
       }
       else if(strcmp(command, "which")==0){
@@ -146,6 +128,12 @@ int sh( int argc, char **argv, char **envp ){
       else if(strcmp(command, "cd")==0){
           printBlock("Executing cd");
           char* desired_directory = second_arg; //EX: cd .. thus arguments[2] == ".."
+          if(second_arg==NULL){
+              printf("SECOND ARG IS NULL\n");
+          }
+          else{
+              printf("second arg IS NOT NULL\n");
+          }
           cd(desired_directory);
       }
       else if(strcmp(command, "pwd")==0){
@@ -223,8 +211,11 @@ int sh( int argc, char **argv, char **envp ){
           
           
           if(num_args==4){//EX: arguments: setenv NAME VALUE NULL
+              printf("ENTERED SETENV NAME VALUE NULL\n");
               name = second_arg;
               value = third_arg;
+              
+              printf("NAME:%s, VALUE:%s\n",name,value);
               
               if(strcmp(name, "PATH")==0){
                   setenv(name, value,1);
@@ -465,15 +456,6 @@ void printenv(char *name){
         printf("ENVIRONMENT:%s",getenv(name));
     }
 }
-
-//void setenv(char *name, char *value){
-//    if(strcmp(value, "")==0){
-//        setenv(name,"");
-//    }
-//    else{
-//        setenv(name, value);
-//    }
-//}
 
 int strToint(char* int_str){
     int num = (int)strtol(int_str, (char **)NULL, 10);
