@@ -101,7 +101,7 @@ int sh( int argc, char **argv, char **envp ){
       if(strcmp(command, "which")==0){
           printBlock("Executing which");
           //printf("ENTERED WHICH------------------\n");
-          if(which(command,pathlist)!=NULL){
+          if(command_path!=NULL){
               char* checkCommand = arguments[1]; //Checks where the second argument is located
               //EX: which pwd returns where pwd is located
               char* found_path = which(checkCommand,pathlist);
