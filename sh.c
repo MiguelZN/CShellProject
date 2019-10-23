@@ -282,6 +282,7 @@ int sh( int argc, char **argv, char **envp ){
                   printf("Successful exec\n");
               }
               
+              //free(parent_directory);
               free(curr_directory);
           }
           //   ./  run within current directory
@@ -292,6 +293,7 @@ int sh( int argc, char **argv, char **envp ){
               char* new_str = concat("Executing Built-in", command);
               printf("NEW STRING:%s\n",new_str);
               printBlock(new_str);
+              free(new_str);
               execve(command_path,&command,NULL);
           }
 
@@ -501,13 +503,14 @@ void cd(char* directory){
         
         //Cd to any directory
         if(chdir(new_dir)==0){
-            
+            free(new_dir);
+            free(current_dir);
         }
         else{
+            free(new_dir);
+            free(current_dir);
             chdir(directory);
         }
-        free(new_dir);
-        free(current_dir);
     }
 }
 
