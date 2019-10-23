@@ -16,9 +16,6 @@ void cd(char* directory);
 
 /*Helper Functions*/
 char* getInput();
-char** getArguments(char* str, char* specifer);
-char** getArguments2(char* str, char* specifer);
-void freeArguments(char** arguments);
 char* concat(const char *s1, const char *s2);
 char* getSubstring(char* str,int start,int end);
 int getOccurrence(char* str, char c, char* firstorlast);

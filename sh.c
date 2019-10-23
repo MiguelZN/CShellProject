@@ -25,36 +25,86 @@ int sh( int argc, char **argv, char **envp ){
 //    arg[1] ="-l";
 //    arg[2] =NULL;
 //    execve(arg[0], arg, envp);
+
+    
     int go = 1;
-    char* prefix = malloc(sizeof(char)*PREFIX_LEN); //What gets displayed before the prompt_text
+
+    //char* prefix = malloc(sizeof(char)*PREFIX_LEN); //What gets displayed before the prompt_text
+    char prefix[COMMAND_LEN];
+    strcpy(prefix,"");
+    
     
   while (go){
       printf("-----------------------------\n");
       struct pathelement *pathlist = get_path();
-//      int i = 0;
-//      int status;
       int forkid = 1;
       
       char* prompt_text = pwd();
       printf("%s [%s]>>",prefix,prompt_text);
       
       char* user_input = getInput();
-      char **arguments = getArguments2(user_input, " ");
       
-      free(prefix);
-      free(prompt_text);
-      free(arguments);
+      int len_userinput = strlen(user_input);
+      char cpy_userinput[len_userinput];
+      char cpy2_userinput[len_userinput];
+      strcpy(cpy_userinput, user_input);
+      strcpy(cpy2_userinput,user_input);
+      free(user_input);
+
+      //Arguments:
+      //Gets the number of arguments
+      char* token = strtok(cpy_userinput, " ");
+      int num_args = 0;
+      while(token!=NULL){
+          printf("%s\n",token);
+          token = strtok(NULL, " ");
+          num_args+=1;
+      }
+      printf("NUM ARGS:%d\n",num_args);
+      num_args+=1; //To include NULL at the end
+      printf("AFTER NUM ARGS:%d\n",num_args);
       
-      break;
+      //Initializes 2d string array
+      char *arguments[num_args];
       
-      int num_args = strToint(arguments[0]);//number of arguments
+      //Inputs the tokens into arguments 2d string array
+      int index = 0;
+      token = strtok(cpy2_userinput, " ");
+      while(token!=NULL){
+          printf("Inputting args:%s\n",token);
+          arguments[index] = "L";
+          arguments[index] = token;
+          //strcpy(arguments[index],token);
+          token = strtok(NULL, " ");
+          
+          //printf("ARG%d, %s\n",index,arguments[index]);
+          index+=1;
+      }
+      
+      //sprintf(command, "%d", num_args);
+      arguments[num_args-1] = NULL;
+      
+      for(int i=0;i<num_args;i++){
+          printf("ARG%d:%s\n",i,arguments[i]);
+      }
+      
       //printf("NUM ARGS)
-      char* command = arguments[1]; //the command to be executed EX: 'ls'
+      char* command = arguments[0]; //the command to be executed EX: 'ls'
+      char* second_arg = "";
+      char* third_arg = "";
+      
+      if(num_args>=3){
+          second_arg = arguments[1];
+      }
+      else if(num_args>=4){
+          second_arg = arguments[1];
+          third_arg = arguments[2];
+      }
       //printf("SIZEOFARRAY:%d\n",num_args);
-      //printf("ARGS0:%s\n",arguments[0]);
+      //printf("ARGS0:%s\n",command);
       //printf("INPUTTED COMMAND:%s\n",command);2
       char* command_path = which(command, pathlist);
-
+      
       
       
     /* check for each built in command and implement */
@@ -64,8 +114,6 @@ int sh( int argc, char **argv, char **envp ){
       //Exits the shell
       if(strcmp(command, "exit")==0){
           printBlock("Executing exit");
-          
-          free(prefix);
           printf("Exiting..\n");
           go = 0;
       }
@@ -73,7 +121,7 @@ int sh( int argc, char **argv, char **envp ){
           printBlock("Executing which");
           //printf("ENTERED WHICH------------------\n");
           if(which(command,pathlist)!=NULL){
-              char* checkCommand = arguments[2]; //Checks where the second argument is located
+              char* checkCommand = arguments[1]; //Checks where the second argument is located
               //EX: which pwd returns where pwd is located
               char* found_path = which(checkCommand,pathlist);
               
@@ -83,7 +131,7 @@ int sh( int argc, char **argv, char **envp ){
       }
       else if(strcmp(command, "where")==0){
           printBlock("Executing where");
-          char* checkCommand = arguments[2]; //Checks where the second argument is located
+          char* checkCommand = second_arg; //Checks where the second argument is located
           //EX: which pwd returns where pwd is located
           
           char* allInstances = where(checkCommand, pathlist);
@@ -92,7 +140,7 @@ int sh( int argc, char **argv, char **envp ){
       }
       else if(strcmp(command, "cd")==0){
           printBlock("Executing cd");
-          char* desired_directory = arguments[2]; //EX: cd .. thus arguments[2] == ".."
+          char* desired_directory = second_arg; //EX: cd .. thus arguments[2] == ".."
           cd(desired_directory);
       }
       else if(strcmp(command, "pwd")==0){
@@ -104,8 +152,12 @@ int sh( int argc, char **argv, char **envp ){
       else if(strcmp(command, "list")==0){
           printBlock("Executing list");
           char* current_dir = pwd();
-          if(arguments[2]!=NULL){
-              list(arguments[2]);
+
+          //If there are atleast 3 arguments which signify a directory was given as the second argument
+          //EX: list /Users
+          if(num_args>=3){
+              printf("ENTERED 2nd ARGUMENT NOT NULL\n");
+              list(second_arg);
           }
           else{
               list(current_dir);
@@ -120,42 +172,39 @@ int sh( int argc, char **argv, char **envp ){
       else if(strcmp(command, "kill")==0){
           printBlock("Executing kill");
           //EX: kill pid, kill -9 pid
-          //Arguments EX: 4 kill pid# NULL  or Arguments: 5 kill signal# pid# NULL
-          int pid_num, signal_num;
-          char* pid_str = arguments[2];
-          char* signal_str = arguments[3];
+          //Arguments EX:kill pid# NULL  or Arguments: kill signal# pid# NULL
           //printf("ENTERED KILL, NUM ARGS:%d\n",num_args);
           
-          if(num_args>=5){ //atleast 5 arguments
+          if(num_args>=4){ //atleast 5 arguments
               //Converts pid_str to integer
-              pid_num = strToint(pid_str);
-              signal_num =strToint(signal_str);
+              int pid_num = strToint(third_arg);
+              int signal_num =strToint(second_arg);
               //printf("5 ARGS, PID:%d, SIG:%d\n",pid_num,signal_num);
               
               kill(pid_num,signal_num);
           }
-          else if(num_args>=4){//atleast 4 arguments
-              pid_num = strToint(pid_str);
+          else if(num_args>=3){//atleast 4 arguments
+              int pid_num = strToint(second_arg);
               //printf("4 ARGS:%d\n",pid_num);
               kill(pid_num,SIGTERM);
           }
       }
       else if(strcmp(command, "prompt")==0){
           printBlock("Executing prompt");
-          char* new_prefix = arguments[2];
           //printf("NEW PREFIX:%s\n",new_prefix);
           //printf("CURRENT PREFIX:%s\n",prefix);
-          free(prefix);
-          prefix = malloc(sizeof(char)*PREFIX_LEN);
-          prefix = "";
-          prefix = concat(prefix, new_prefix);
+          memset(prefix, 0, sizeof(prefix));
+          strcpy(prefix, "");
+          
+          strcat(prefix, second_arg);
+          //sprintf(prefix,"%s%s",prefix,new_prefix);
+          //prefix = concat(prefix, new_prefix);
       }
       else if(strcmp(command, "printenv")==0){
           printBlock("Executing printenv");
-          int num_args =strToint(arguments[0]);
-          if(num_args>=4){ //EX: arguments: 4 printenv HOME NULL
-              char* arg = arguments[2];
-              printenv(arg);
+          if(num_args>=3){ //EX: arguments: printenv HOME NULL
+              char* env_var = second_arg;
+              printenv(env_var);
           }
           else{
               printenv(NULL);
@@ -163,15 +212,14 @@ int sh( int argc, char **argv, char **envp ){
       }
       else if(strcmp(command, "setenv")==0){
           printBlock("Executing setenv");
-          int num_args = strToint(arguments[0]);
           char* name;
           char* value;
           
           
           
-          if(num_args==5){//EX: arguments: 5 setenv NAME VALUE NULL
-              name = arguments[2];
-              value = arguments[3];
+          if(num_args==4){//EX: arguments: setenv NAME VALUE NULL
+              name = second_arg;
+              value = third_arg;
               
               if(strcmp(name, "PATH")==0){
                   setenv(name, value,1);
@@ -194,24 +242,20 @@ int sh( int argc, char **argv, char **envp ){
                   setenv(name, value, 1);
               }
           }
-          else if(num_args==4){ //EX: arguments: 4 setenv NAME NULL
-              name = arguments[2];
+          else if(num_args==3){ //EX: arguments: setenv NAME NULL
+              name = second_arg;
               //printf("NAME:%s\n",name);
               setenv(name, "", 1);
           }
-          else if(num_args==3){//EX: arguments: 3 setenv NULL
+          else if(num_args==2){//EX: arguments: setenv NULL
               //printf("ENTERED PRINTENV\n");
               printenv(NULL);
           }
       }
-      else if(access(command_path, F_OK) == 0 ||arguments[1][0]=='.' ||arguments[1][0]=='/'){
+      else if(access(command_path, F_OK) == 0 ||command[0]=='.' ||command[0]=='/'){
           //printf("ENTERED FORK\n");
           forkid = fork();
       }
-      
-
-      //printf("FREED MEMORY\n");
-      
       
       //Checks for built-in commands and executes them
       if(forkid<0){
@@ -226,37 +270,37 @@ int sh( int argc, char **argv, char **envp ){
               k+=1;
           }
           
-          printf("COMMAND:%s\n",arguments[1]);
+          printf("COMMAND:%s\n",command);
           //    ../  Go up to parent directory and run
-          if(arguments[1][0]=='.' && arguments[1][1]=='.' && arguments[1][2]=='/'){
+          if(command[0]=='.' && command[1]=='.' && command[2]=='/'){
               printf("ENTERED ../\n");
               char* curr_directory = pwd();
               int index = getOccurrence(curr_directory, '/', "last");
               char* parent_directory = getSubstring(curr_directory, 0, index);
               
               //Gets file name
-              printf("SUBSTRING:%s\n", &arguments[1][3]);
+              printf("SUBSTRING:%s\n", &command[3]);
 
-              parent_directory = concat(parent_directory, &arguments[1][3]);
+              parent_directory = concat(parent_directory, &command[3]);
               printf("Parent Directory:%s\n",parent_directory);
-              if(execvp(parent_directory,&arguments[1])==-1){
+              if(execvp(parent_directory,&command)==-1){
                   kill(getpid(),SIGTERM);
                   printf("Not a valid exec\n");
               }
               else{
-                  execvp(parent_directory,&arguments[1]);
+                  execvp(parent_directory,&command);
                   printf("Successful exec\n");
               }
           }
           //   ./  run within current directory
-          else if(arguments[1][0]=='.' && arguments[1][1]=='/' ){
+          else if(command[0]=='.' && command[1]=='/' ){
               
           }else{
             //NOTE: execve deallocates automatically child process memory
-              char* new_str = concat("Executing Built-in", arguments[1]);
+              char* new_str = concat("Executing Built-in", command);
               printf("NEW STRING:%s\n",new_str);
               printBlock(new_str);
-              execve(command_path,&arguments[1],NULL);
+              execve(command_path,&command,NULL);
           }
 
               //printf("AFTER EXECUTING\n");
@@ -268,13 +312,11 @@ int sh( int argc, char **argv, char **envp ){
           
       }
       
-      //Freeing memory
+      //Freeing memory paths
       freePath(pathlist);
-      free(user_input);
-      freeArguments(arguments);
       free(command_path);
       
-      //printf("REACHED END OF WHILE LOOP\n");
+      printf("REACHED END OF WHILE LOOP\n");
       //printf("-----------------------------\n\n");
   }
   return 0;
@@ -328,142 +370,6 @@ char* getInput(){
     fgets(input, max_string_length,stdin);
     input[strlen(input)-1] = '\0'; //NULL
     return input;
-}
-
-char** getArguments(char* str, char* specifer){
-    //Creates two copies of str (since strok_r modifies them)
-    char* str_copy = strdup(str);
-    char* str_copy2 = strdup(str);
-    char *rest = NULL;
-    char *token;
-
-    //Checks for how many whitespaces there are
-    int num_whitespaces =0;
-    for (token = strtok_r(str_copy, specifer, &rest);token != NULL;
-         token = strtok_r(NULL, specifer, &rest)) {
-        num_whitespaces+=1;
-    }
-    //printf("FOUND %d WS\n",num_whitespaces);
-    //EX: if found 2 whitespaces then EX command looks like: >>cd(ONEWS)ls(SECONDWS)main.c
-    //String array should look like {SIZE,"cd","ls","main.c",NULL}
-    //where SIZE is the size of the array
-    //and the last element is NULL for arguments to be executed
-
-    //Allocates array where:
-    /*0th index: size of array
-     1th index: command
-     2th index: file EX: main.c
-     3th+ index: flags
-     */
-    int sizeofarray = num_whitespaces+2; //1 extra for first element, 2 for SIZE and NULL
-    char** stringarr = malloc(sizeof(char)*sizeofarray);
-    for(int k=0;k<sizeofarray;k++){
-        stringarr[k] = malloc(sizeof(char)*(strlen(str)));
-    }
-    
-    
-    //Inserts the size of array into the 0th index
-    //printf("%d",sizeofarray);
-    char* num_malloc = malloc(sizeof(char)*sizeof(int));
-    sprintf(num_malloc, "%d",sizeofarray);
-    //snprintf(stringarr[0],strlen(str),"%d",sizeofarray);
-    stringarr[0] = num_malloc;
-    //printf("SIZE ARGS0:%s\n",stringarr[0]);
-    
-    //Starts at 1st index and inserts the different spliced strings
-    int i = 1;
-    char *rest2 = NULL;
-    for (token = strtok_r(str_copy2, specifer, &rest2);token != NULL;
-        token = strtok_r(NULL, specifer, &rest2)) {
-        //printf("token:%s\n", token);
-        stringarr[i] = strdup(token);
-        //printf("INDEX%d\n",i);
-        //printf("INDEX%d:%s\n",stringarr[i]);
-        i+=1;
-    }
-    
-    //Sets last to NULL
-    stringarr[sizeofarray-1] = NULL;
-
-    free(str_copy);
-    free(str_copy2);
-    return stringarr;
-
-}
-
-char **getArguments2(char*str, char* specifier){
-//Creates two copies of str (since strok_r modifies them)
-char str_copy[strlen(str)];
-strcpy(str_copy, str);
-
-char str_copy2[strlen(str)];
-strcpy(str_copy2, str);
-
-char *rest = NULL;
-char *token;
-
-//Checks for how many whitespaces there are
-int num_whitespaces =0;
-for (token = strtok_r(str_copy, specifier, &rest);token != NULL;
-     token = strtok_r(NULL, specifier, &rest)) {
-    num_whitespaces+=1;
-}
-num_whitespaces-=1;
-//printf("FOUND %d WS\n",num_whitespaces);
-//EX: if found 2 whitespaces then EX command looks like: >>cd(ONEWS)ls(SECONDWS)main.c
-//String array should look like {SIZE,"cd","ls","main.c",NULL}
-//where SIZE is the size of the array
-//and the last element is NULL for arguments to be executed
-
-//Allocates array where:
-/*0th index: size of array
- 1th index: command
- 2th index: file EX: main.c
- 3th+ index: flags
- */
-int sizeofarray = num_whitespaces+3; //1 extra for first element, 2 for SIZE and NULL
-char** stringarr = malloc(sizeof(char)*sizeofarray);
-for(int k=0;k<sizeofarray;k++){
-    stringarr[k] = malloc(sizeof(char)*(strlen(str)));
-    stringarr[k] = "";
-}
-
-
-//Inserts the size of array into the 0th index
-//printf("%d",sizeofarray);
-char* num_malloc = malloc(sizeof(char)*sizeof(int));
-sprintf(num_malloc, "%d",sizeofarray);
-stringarr[0] = num_malloc;
-//printf("SIZE ARGS0:%s\n",stringarr[0]);
-
-//Starts at 1st index and inserts the different spliced strings
-int i = 1;
-char *rest2 = NULL;
-for (token = strtok_r(str_copy2, specifier, &rest2);token != NULL;
-     token = strtok_r(NULL, specifier, &rest2)) {
-    //printf("token:%s\n", token);
-    stringarr[i] = strdup(token);
-    //printf("INDEX%d\n",i);
-    //printf("INDEX%d:%s\n",stringarr[i]);
-    i+=1;
-}
-
-//Sets last to NULL
-stringarr[sizeofarray-1] = NULL;
-return stringarr;
-
-}
-
-void freeArguments(char** arguments){
-    int sizeofarr = strToint(arguments[0]);
-    //printf("ENTERED FREE ARGUMENTS\n");
-    //printf("FA, SIZEOFARRAY:%d\n",sizeofarr);
-    for(int i=sizeofarr-1;i>=0;i--){
-        //printf("ARGUMENTS%s\n",arguments[i]);
-        //printf("FREED ARG:%s\n", arguments[i]);
-        free(arguments[i]);
-        
-    }
 }
 
 char* concat(const char *s1, const char *s2){
@@ -536,17 +442,6 @@ void list(char* directory_path){
     }
     closedir(curr_dir);
 }
-
-//void prompt(char* current_prompt, char* prefix){
-//    //char* new_prefix = arguments[2];
-//    //printf("NEW PREFIX:%s\n",new_prefix);
-//    //printf("CURRENT PREFIX:%s\n",prefix);
-//    char *new_prefix = prefix;
-//    free(prefix);
-//    prefix = malloc(sizeof(char)*PREFIX_LEN);
-//    prefix = "";
-//    prefix = concat(prefix, new_prefix);
-//}
 
 void printenv(char *name){
     extern char **environ;
