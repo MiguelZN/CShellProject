@@ -518,9 +518,9 @@ void cd(char* directory){
             free(current_dir);
         }
         else{
+            chdir(directory);
             free(new_dir);
             free(current_dir);
-            chdir(directory);
         }
     }
 }
