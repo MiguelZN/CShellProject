@@ -320,7 +320,7 @@ int sh( int argc, char **argv, char **envp ){
           printBlock("Executing exit");
           printf("Exiting..\n");
           //Freeing memory paths
-          //freePath(pathlist);
+          freePath(pathlist);
           free(command_path);
           free(user_input);
           free(prompt_text);
@@ -328,7 +328,7 @@ int sh( int argc, char **argv, char **envp ){
       }
       else{
           //Freeing memory paths
-          //freePath(pathlist);
+          freePath(pathlist);
           free(command_path);
           free(user_input);
           free(prompt_text);
