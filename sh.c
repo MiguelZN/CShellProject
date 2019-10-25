@@ -38,7 +38,7 @@ int sh( int argc, char **argv, char **envp ){
       strcpy(cpy_userinput, user_input);
       strcpy(cpy2_userinput,user_input);
 
-      //Arguments:
+      //Arguments:-------------------------------------
       //Gets the number of arguments
       char* token = strtok(cpy_userinput, " ");
       int num_args = 0;
@@ -47,9 +47,7 @@ int sh( int argc, char **argv, char **envp ){
           token = strtok(NULL, " ");
           num_args+=1;
       }
-      printf("NUM ARGS:%d\n",num_args);
-      num_args+=1; //To include NULL at the end
-      printf("AFTER NUM ARGS:%d\n",num_args);
+      num_args+=1; //Added 1 more include NULL at the end
       
       //Initializes 2d string array
       char *arguments[num_args];
@@ -58,7 +56,7 @@ int sh( int argc, char **argv, char **envp ){
       int index = 0;
       token = strtok(cpy2_userinput, " ");
       while(token!=NULL){
-          printf("Inputting args:%s\n",token);
+          //printf("Inputting args:%s\n",token);
           arguments[index] = "";
           arguments[index] = token;
           //strcpy(arguments[index],token);
@@ -70,12 +68,10 @@ int sh( int argc, char **argv, char **envp ){
       
       //sprintf(command, "%d", num_args);
       arguments[num_args-1] = NULL;
+//      for(int i=0;i<num_args;i++){
+//          printf("ARG%d:%s\n",i,arguments[i]);
+//      }
       
-      for(int i=0;i<num_args;i++){
-          printf("ARG%d:%s\n",i,arguments[i]);
-      }
-      
-      //printf("NUM ARGS)
       char* command = arguments[0]; //the command to be executed EX: 'ls'
       char* second_arg = NULL;
       char* third_arg = NULL;
@@ -97,8 +93,8 @@ int sh( int argc, char **argv, char **envp ){
           if(num_args>=3){
               struct pathelement *temppathlist = get_path();
               char* checkCommandExists = which(second_arg,pathlist);
-              printf("SECOND ARG:%s\n",second_arg);
-              printf("checkCommandExists%s\n",checkCommandExists);
+              //printf("SECOND ARG:%s\n",second_arg);
+              //printf("checkCommandExists%s\n",checkCommandExists);
               
               if(access(checkCommandExists, F_OK) == 0){
                   printf("PATH:=%s\n",checkCommandExists);
@@ -123,12 +119,6 @@ int sh( int argc, char **argv, char **envp ){
       else if(strcmp(command, "cd")==0){
           printBlock("Executing cd");
           char* desired_directory = second_arg; //EX: cd .. thus arguments[2] == ".."
-          if(second_arg==NULL){
-              printf("SECOND ARG IS NULL\n");
-          }
-          else{
-              printf("second arg IS NOT NULL\n");
-          }
           cd(desired_directory);
       }
       else if(strcmp(command, "pwd")==0){
@@ -146,6 +136,7 @@ int sh( int argc, char **argv, char **envp ){
               printf("ENTERED 2nd ARGUMENT NOT NULL\n");
               list(second_arg);
           }
+          //If no argument was given, it lists all files located in current directory
           else{
               char* current_dir = pwd();
               list(current_dir);
@@ -159,36 +150,31 @@ int sh( int argc, char **argv, char **envp ){
       }
       else if(strcmp(command, "kill")==0){
           printBlock("Executing kill");
-          //EX: kill pid, kill -9 pid
-          //Arguments EX:kill pid# NULL  or Arguments: kill signal# pid# NULL
-          //printf("ENTERED KILL, NUM ARGS:%d\n",num_args);
           
-          if(num_args>=4){ //atleast 5 arguments
+          if(num_args>=4){
               //Converts pid_str to integer
               int pid_num = strToint(third_arg);
               int signal_num =strToint(second_arg);
-              //printf("5 ARGS, PID:%d, SIG:%d\n",pid_num,signal_num);
-              
               kill(pid_num,signal_num);
           }
           else if(num_args>=3){//atleast 4 arguments
               int pid_num = strToint(second_arg);
-              //printf("4 ARGS:%d\n",pid_num);
               kill(pid_num,SIGTERM);
           }
       }
       else if(strcmp(command, "prompt")==0){
           printBlock("Executing prompt");
-          //printf("NEW PREFIX:%s\n",new_prefix);
-          //printf("CURRENT PREFIX:%s\n",prefix);
+          
+          //Resets prefix char array
           memset(prefix, 0, sizeof(prefix));
           strcpy(prefix, "");
           
+          //Adds the new prompt
           strcat(prefix, second_arg);
       }
       else if(strcmp(command, "printenv")==0){
           printBlock("Executing printenv");
-          if(num_args>=3){ //EX: arguments: printenv HOME NULL
+          if(num_args>=3){
               char* env_var = second_arg;
               printenv(env_var);
           }
@@ -210,12 +196,12 @@ int sh( int argc, char **argv, char **envp ){
               
               printf("NAME:%s, VALUE:%s\n",name,value);
               
-//              if(strcmp(name, "PATH")==0){
-//                  setenv(name, value,1);
-//                  //Should update linked list for path directories (free old one)
-//                  freePath(pathlist);
-//                  pathlist = get_path();
-//              }
+              if(strcmp(name, "PATH")==0){
+                  setenv(name, value,1);
+                  //Should update linked list for path directories (free old one)
+                  freePath(pathlist);
+                  pathlist = get_path();
+              }
               if(strcmp(name, "HOME")==0){
                   DIR *directory = opendir(value);
                   if(directory){
@@ -246,7 +232,7 @@ int sh( int argc, char **argv, char **envp ){
           forkid = fork();
       }
       
-      //Checks for built-in commands and executes them
+      //Checks for built-in commands and executes them--------------------
       if(forkid<0){
           ;
       }
@@ -268,26 +254,26 @@ int sh( int argc, char **argv, char **envp ){
               char* parent_directory = getSubstring(curr_directory, 0, index);
               
               //Gets file name
-              printf("SUBSTRING:%s\n", &command[3]);
+              //printf("SUBSTRING:%s\n", &command[3]);
 
               parent_directory = concat(parent_directory, &command[3]);
-              printf("Parent Directory:%s\n",parent_directory);
+              //printf("Parent Directory:%s\n",parent_directory);
               if(execvp(parent_directory,arguments)==-1){
                   kill(getpid(),SIGTERM);
                   printf("Not a valid exec\n");
               }
               else{
                   execvp(parent_directory,arguments);
-                  printf("Successful exec\n");
+                  //printf("Successful exec\n");
               }
               
               free(parent_directory);
               free(curr_directory);
           }
-          //   ./  run within current directory
+          //   ./  runs programs within current directory
           else if(command[0]=='.' && command[1]=='/' ){
-              printf("Executing ./ command:%s\n",command);
-              printf("VALUE%d",execvp(command,arguments));
+              //printf("Executing ./ command:%s\n",command);
+              execvp(command,arguments);
           }else{
             //NOTE: execve deallocates automatically child process memory
               char* new_str = concat("Executing Built-in", command);
@@ -296,20 +282,18 @@ int sh( int argc, char **argv, char **envp ){
               free(new_str);
               execve(command_path,arguments,NULL);
           }
-
-              //printf("AFTER EXECUTING\n");
       }
       //Parent
       else if(forkid>0){
           waitpid(forkid, NULL,0);
           //printf("PARENT:\n");
-          
       }
       
-      //Exits the shell
+      //Exits the shell and frees memory
       if(strcmp(command, "exit")==0){
           printBlock("Executing exit");
           printf("Exiting..\n");
+          
           //Freeing memory paths
           freePath(pathlist);
           free(command_path);
@@ -318,7 +302,7 @@ int sh( int argc, char **argv, char **envp ){
           go = 0;
       }
       else{
-          //Freeing memory paths
+          //Freeing memory paths at end of while loop if user did not exit
           freePath(pathlist);
           free(command_path);
           free(user_input);
@@ -326,8 +310,7 @@ int sh( int argc, char **argv, char **envp ){
       }
       
       
-      printf("REACHED END OF WHILE LOOP\n");
-      //printf("-----------------------------\n\n");
+      //printf("REACHED END OF WHILE LOOP\n");
   }
   return 0;
 } /* sh() */
@@ -337,13 +320,19 @@ char *which(char *command, struct pathelement *pathlist ){
     char *located_path = malloc(sizeof(char)*COMMAND_LEN);
     
     while (p) {         // WHERE
-        printf("PATHLIST:%s\n",p->element);
+        
         //printf("PATHELEMENT:%s\n",p->element);
-        sprintf(located_path, "%s/%s", p->element,command);
+        //sprintf(located_path, "%s/%s", p->element,command);
+        strcpy(located_path, p->element);
+        strcat(located_path, "/");
+        strcat(located_path, command);
         if (access(located_path, F_OK) == 0){
             //printf("FOUND");
             //printf("[%s]\n", located_path);
             break;
+        }
+        else{
+            strcpy(located_path, "");
         }
         p = p->next;
     }

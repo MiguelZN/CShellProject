@@ -57,8 +57,4 @@ void freePath(struct pathelement* path){
         path = path->next;
         free(temp);
     }
-    
-    if(path!=NULL){
-        printf("NOT EMPTY\n");
-    }
 }
