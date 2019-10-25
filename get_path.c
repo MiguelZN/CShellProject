@@ -20,11 +20,12 @@ struct pathelement* get_path()
 			   make a copy of it, since strtok modifies the
 			   string that it is working with... */
   //path = malloc((strlen(p)+1)*sizeof(char));	/* use malloc(3) */
-  char path2[strlen(p)+1];
-  strcpy(path2,"");
-  // strncpy(path, p, strlen(p));
-  path2[strlen(p)] = '\0';
+  //strncpy(path, p, strlen(p));
+    char* path2 = getenv("PATH");
+    
+    //printf("PATH2:%s\n",path2);
 
+    //p = strtok(path, ":");
   p = strtok(path2, ":"); 	/* PATH is : delimited */
   do				/* loop through the PATH */
   {				/* to build a linked list of dirs */
@@ -41,6 +42,7 @@ struct pathelement* get_path()
     tmp->element = p;	
     tmp->next = NULL;
   } while ((p = strtok(NULL, ":")));
+    printf("PATHLIST:%s\n",pathlist);
 
   return pathlist;
 } /* end get_path() */

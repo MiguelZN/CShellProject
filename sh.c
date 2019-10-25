@@ -103,6 +103,8 @@ int sh( int argc, char **argv, char **envp ){
           //printf("ENTERED WHICH------------------\n");
           if(num_args>=3){
               char* checkCommandExists = which(second_arg,pathlist);
+              printf("SECOND ARG:%s\n",second_arg);
+              //printf("SECOND ARG:%s\n",second_arg);
               
               if(access(checkCommandExists, F_OK) == 0){
                   printf("PATH:=%s\n",checkCommandExists);
@@ -118,10 +120,7 @@ int sh( int argc, char **argv, char **envp ){
           printBlock("Executing where");
           
           if(num_args>=3){
-              char* allInstances = where(second_arg,pathlist);
-              
-              printf("PATHS:=%s\n",allInstances);
-              free(allInstances);
+              where(second_arg,pathlist);
           }
       }
       else if(strcmp(command, "cd")==0){
@@ -342,7 +341,10 @@ char *which(char *command, struct pathelement *pathlist ){
     char *located_path = malloc(sizeof(char)*COMMAND_LEN);
     int found = 0;
     
+    
+    
     while (p) {         // WHERE
+        printf("PATHLIST:%s\n",p->element);
         //printf("PATHELEMENT:%s\n",p->element);
         sprintf(located_path, "%s/%s", p->element,command);
         if (access(located_path, F_OK) == 0){
@@ -357,26 +359,27 @@ char *which(char *command, struct pathelement *pathlist ){
     return located_path;
 }
 
-char* where(char *command, struct pathelement *pathlist){
+void where(char *command, struct pathelement *pathlist){
     struct pathelement *p = pathlist;
-    char *allInstances = malloc(sizeof(char)*COMMAND_LEN);
-    char *curr_str = malloc(sizeof(char)*COMMAND_LEN);
-    //char curr_str[50];
     //printf("ENTERED WHERE\n");
-    allInstances = ""; //Initializes the string to empty string
+    char curr_str[100];
+    strcpy(curr_str, "");
+    
+    char allInstances[250];
+    strcpy(curr_str, "");
     
     while (p) {// WHERE
         sprintf(curr_str, "%s/%s", p->element,command);
         //printf("WHERE:%s\n",curr_str);
         if (access(curr_str, F_OK) == 0){
             //printf("CURRENT ALL INSTANCES:%s\n",allInstances);
-            allInstances = concat(allInstances, curr_str);
+            sprintf(allInstances,"%s%s\n",allInstances,curr_str);
             //printf("FOUND\n");
         }
         p = p->next;
     }
     
-    return allInstances;
+    printf("PATHS:=%s\n",allInstances);
 }
 
 char* getInput(){
