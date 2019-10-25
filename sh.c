@@ -295,7 +295,8 @@ int sh( int argc, char **argv, char **envp ){
           }
           //   ./  run within current directory
           else if(command[0]=='.' && command[1]=='/' ){
-              
+              printf("Executing ./ command:%s\n",command);
+              execve(command,arguments,NULL);
           }else{
             //NOTE: execve deallocates automatically child process memory
               char* new_str = concat("Executing Built-in", command);
