@@ -42,7 +42,6 @@ struct pathelement* get_path()
     tmp->element = p;	
     tmp->next = NULL;
   } while ((p = strtok(NULL, ":")));
-    printf("PATHLIST:%s\n",pathlist);
 
   return pathlist;
 } /* end get_path() */
