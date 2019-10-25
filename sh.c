@@ -102,9 +102,10 @@ int sh( int argc, char **argv, char **envp ){
           printBlock("Executing which");
           //printf("ENTERED WHICH------------------\n");
           if(num_args>=3){
+              struct pathelement *temppathlist = get_path();
               char* checkCommandExists = which(second_arg,pathlist);
               printf("SECOND ARG:%s\n",second_arg);
-              //printf("SECOND ARG:%s\n",second_arg);
+              printf("checkCommandExists%s\n",checkCommandExists);
               
               if(access(checkCommandExists, F_OK) == 0){
                   printf("PATH:=%s\n",checkCommandExists);
@@ -114,13 +115,16 @@ int sh( int argc, char **argv, char **envp ){
               }
               
               free(checkCommandExists);
+              freePath(temppathlist);
           }
       }
       else if(strcmp(command, "where")==0){
           printBlock("Executing where");
           
           if(num_args>=3){
-              where(second_arg,pathlist);
+              struct pathelement *temppathlist = get_path();
+              where(second_arg,temppathlist);
+              freePath(temppathlist);
           }
       }
       else if(strcmp(command, "cd")==0){
@@ -215,13 +219,13 @@ int sh( int argc, char **argv, char **envp ){
               
               printf("NAME:%s, VALUE:%s\n",name,value);
               
-              if(strcmp(name, "PATH")==0){
-                  setenv(name, value,1);
-                  //Should update linked list for path directories (free old one)
-                  freePath(pathlist);
-                  pathlist = get_path();
-              }
-              else if(strcmp(name, "HOME")==0){
+//              if(strcmp(name, "PATH")==0){
+//                  setenv(name, value,1);
+//                  //Should update linked list for path directories (free old one)
+//                  freePath(pathlist);
+//                  pathlist = get_path();
+//              }
+              if(strcmp(name, "HOME")==0){
                   DIR *directory = opendir(value);
                   if(directory){
                       setenv(name, value, 1);
@@ -277,16 +281,16 @@ int sh( int argc, char **argv, char **envp ){
 
               parent_directory = concat(parent_directory, &command[3]);
               printf("Parent Directory:%s\n",parent_directory);
-              if(execvp(parent_directory,&command)==-1){
+              if(execvp(parent_directory,arguments)==-1){
                   kill(getpid(),SIGTERM);
                   printf("Not a valid exec\n");
               }
               else{
-                  execvp(parent_directory,&command);
+                  execvp(parent_directory,arguments);
                   printf("Successful exec\n");
               }
               
-              //free(parent_directory);
+              free(parent_directory);
               free(curr_directory);
           }
           //   ./  run within current directory
@@ -298,7 +302,7 @@ int sh( int argc, char **argv, char **envp ){
               printf("NEW STRING:%s\n",new_str);
               printBlock(new_str);
               free(new_str);
-              execve(command_path,&command,NULL);
+              execve(command_path,arguments,NULL);
           }
 
               //printf("AFTER EXECUTING\n");
@@ -315,7 +319,7 @@ int sh( int argc, char **argv, char **envp ){
           printBlock("Executing exit");
           printf("Exiting..\n");
           //Freeing memory paths
-          freePath(pathlist);
+          //freePath(pathlist);
           free(command_path);
           free(user_input);
           free(prompt_text);
@@ -323,7 +327,7 @@ int sh( int argc, char **argv, char **envp ){
       }
       else{
           //Freeing memory paths
-          freePath(pathlist);
+          //freePath(pathlist);
           free(command_path);
           free(user_input);
           free(prompt_text);
@@ -340,8 +344,6 @@ char *which(char *command, struct pathelement *pathlist ){
     struct pathelement *p = pathlist;
     char *located_path = malloc(sizeof(char)*COMMAND_LEN);
     int found = 0;
-    
-    
     
     while (p) {         // WHERE
         printf("PATHLIST:%s\n",p->element);
