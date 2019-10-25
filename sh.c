@@ -87,16 +87,9 @@ int sh( int argc, char **argv, char **envp ){
           second_arg = arguments[1];
           third_arg = arguments[2];
       }
-      //printf("SIZEOFARRAY:%d\n",num_args);
-      //printf("ARGS0:%s\n",command);
-      //printf("INPUTTED COMMAND:%s\n",command);2
+
       char* command_path = which(command, pathlist);
-      
-      
-      
-    /* check for each built in command and implement */
-      //printf("COMMANDPATH:%s\n",command_path);
-      
+
       /*Custom Commands*/
       if(strcmp(command, "which")==0){
           printBlock("Executing which");
@@ -146,7 +139,6 @@ int sh( int argc, char **argv, char **envp ){
       }
       else if(strcmp(command, "list")==0){
           printBlock("Executing list");
-          char* current_dir = pwd();
 
           //If there are atleast 3 arguments which signify a directory was given as the second argument
           //EX: list /Users
@@ -155,9 +147,10 @@ int sh( int argc, char **argv, char **envp ){
               list(second_arg);
           }
           else{
+              char* current_dir = pwd();
               list(current_dir);
+              free(current_dir);
           }
-          free(current_dir);
       }
       else if(strcmp(command, "pid")==0){
           printBlock("Executing pid");
@@ -192,8 +185,6 @@ int sh( int argc, char **argv, char **envp ){
           strcpy(prefix, "");
           
           strcat(prefix, second_arg);
-          //sprintf(prefix,"%s%s",prefix,new_prefix);
-          //prefix = concat(prefix, new_prefix);
       }
       else if(strcmp(command, "printenv")==0){
           printBlock("Executing printenv");
@@ -344,7 +335,6 @@ int sh( int argc, char **argv, char **envp ){
 char *which(char *command, struct pathelement *pathlist ){
     struct pathelement *p = pathlist;
     char *located_path = malloc(sizeof(char)*COMMAND_LEN);
-    int found = 0;
     
     while (p) {         // WHERE
         printf("PATHLIST:%s\n",p->element);
@@ -353,7 +343,6 @@ char *which(char *command, struct pathelement *pathlist ){
         if (access(located_path, F_OK) == 0){
             //printf("FOUND");
             //printf("[%s]\n", located_path);
-            found = 1;
             break;
         }
         p = p->next;
@@ -365,13 +354,17 @@ char *which(char *command, struct pathelement *pathlist ){
 void where(char *command, struct pathelement *pathlist){
     struct pathelement *p = pathlist;
     //printf("ENTERED WHERE\n");
-    char curr_str[100];
-    strcpy(curr_str, "");
+    int arr_len = 250;
     
-    char allInstances[250];
-    strcpy(curr_str, "");
+    char allInstances[arr_len];
+    strcpy(allInstances, "");
+    allInstances[arr_len-1] = '\0';
     
     while (p) {// WHERE
+        char curr_str[arr_len];
+        strcpy(curr_str, "");
+        curr_str[arr_len-1] = '\0';
+        
         sprintf(curr_str, "%s/%s", p->element,command);
         //printf("WHERE:%s\n",curr_str);
         if (access(curr_str, F_OK) == 0){
