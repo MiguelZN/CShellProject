@@ -101,20 +101,28 @@ int sh( int argc, char **argv, char **envp ){
       if(strcmp(command, "which")==0){
           printBlock("Executing which");
           //printf("ENTERED WHICH------------------\n");
-          
-          if(access(command_path, F_OK) == 0){
-              printf("PATH:=%s\n",command_path);
-          }
-          else{
-              printf("Could not find command path!\n");
+          if(num_args>=3){
+              char* checkCommandExists = which(second_arg,pathlist);
+              
+              if(access(checkCommandExists, F_OK) == 0){
+                  printf("PATH:=%s\n",checkCommandExists);
+              }
+              else{
+                  printf("Could not find command path!\n");
+              }
+              
+              free(checkCommandExists);
           }
       }
       else if(strcmp(command, "where")==0){
           printBlock("Executing where");
           
-          char* allInstances = where(command, pathlist);
-          printf("PATHS:=%s\n",allInstances);
-          free(allInstances);
+          if(num_args>=3){
+              char* allInstances = where(second_arg,pathlist);
+              
+              printf("PATHS:=%s\n",allInstances);
+              free(allInstances);
+          }
       }
       else if(strcmp(command, "cd")==0){
           printBlock("Executing cd");
