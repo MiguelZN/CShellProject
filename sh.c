@@ -318,12 +318,13 @@ int sh( int argc, char **argv, char **envp ){
 char *which(char *command, struct pathelement *pathlist ){
     struct pathelement *p = pathlist;
     char *located_path = malloc(sizeof(char)*COMMAND_LEN);
+    strcpy(located_path, "");
     
     while (p) {         // WHERE
         
         //printf("PATHELEMENT:%s\n",p->element);
         //sprintf(located_path, "%s/%s", p->element,command);
-        strcpy(located_path, p->element);
+        strcat(located_path, p->element);
         strcat(located_path, "/");
         strcat(located_path, command);
         if (access(located_path, F_OK) == 0){

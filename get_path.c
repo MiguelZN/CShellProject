@@ -20,8 +20,9 @@ struct pathelement* get_path()
 			   make a copy of it, since strtok modifies the
 			   string that it is working with... */
   path = malloc((strlen(p)+1)*sizeof(char));	/* use malloc(3) */
-    char* point_to_pathmemory = path;
+    strcpy(path, "");
   strncpy(path, p, strlen(p));
+    char* point_to_pathmemory = path;
     //char* path2 = getenv("PATH");
     //printf("PATH2:%s\n",path2);
 //    char path2[(strlen(p)+1)*sizeof(char)];
